@@ -1,0 +1,41 @@
+# Миграции
+MIGRATIONS_DIR := ./migrations
+DB_DSN         := postgres://user:pass@localhost:5432/db_name?sslmode=disable
+
+.PHONY: up down status create reset
+
+# Применить все новые миграции
+up:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DB_DSN)" up
+
+# Откатить последнюю миграцию
+down:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DB_DSN)" down 1
+
+# Показать текущую версию (статус)
+status:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DB_DSN)" version
+
+# Создать пару файлов миграции (up/down)
+# Передавать имя без номера:
+#   make create NAME=add_users_table
+create:
+	migrate create -ext sql -dir $(MIGRATIONS_DIR) $(NAME)
+
+# Сбросить ВСЕ таблицы
+reset:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DB_DSN)" drop -f
+
+
+.PHONY: proto
+
+BREW_PROTOBUF := $(shell brew --prefix protobuf)
+PROTOC_INCLUDE := $(BREW_PROTOBUF)/include
+
+proto:
+	protoc \
+	  -I api/proto \
+	  -I $(PROTOC_INCLUDE) \
+	  --go_out=api/pb        --go_opt=paths=source_relative \
+	  --go-grpc_out=api/pb    --go-grpc_opt=paths=source_relative \
+	  api/proto/filename.proto
