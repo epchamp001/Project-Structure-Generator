@@ -11,6 +11,7 @@ import (
 
 func main() {
 	var cfg config.Config
+	var targetDir string
 
 	rootCmd := &cobra.Command{
 		Use:   "projgen",
@@ -40,16 +41,18 @@ func main() {
 				os.Exit(1)
 			}
 
-			service.CreateProjectStructure(&cfg, cfg.ProjectName)
-			service.InitGoMod(cfg.ProjectName, cfg.ProjectName)
-			service.CopyStaticDir("templates/pkg", filepath.Join(cfg.ProjectName, "pkg"))
-			service.CopyTemplates("templates", cfg.ProjectName, &cfg)
+			projectRoot := filepath.Join(targetDir, cfg.ProjectName)
+			service.CreateProjectStructure(&cfg, projectRoot)
+			service.InitGoMod(cfg.ProjectName, projectRoot)
+			service.CopyStaticDir("templates/pkg", filepath.Join(projectRoot, "pkg"))
+			service.CopyTemplates("templates", projectRoot, &cfg)
 			slog.Info("✅ Project generated successfully!")
 		},
 	}
 
 	rootCmd.Flags().StringVarP(&cfg.ProjectName, "name", "n", "", "Project name (required)")
 	rootCmd.Flags().StringVarP(&cfg.CmdName, "cmd", "c", "", "Subdirectory name under cmd/ (required)")
+	rootCmd.Flags().StringVarP(&targetDir, "dir", "d", ".", "Target directory to create project in")
 	rootCmd.Flags().BoolVarP(&cfg.EnableGRPC, "grpc", "g", false, "Enable gRPC")
 	rootCmd.Flags().BoolVarP(&cfg.EnableHTTP, "http", "t", false, "Enable HTTP")
 	rootCmd.Flags().BoolVarP(&cfg.EnableGrafana, "grafana", "f", false, "Enable Grafana")
