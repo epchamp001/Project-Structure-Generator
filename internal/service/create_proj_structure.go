@@ -18,7 +18,7 @@ func CreateProjectStructure(cfg *config.Config, root string) {
 		"internal/domain/models",
 		"internal/domain/vo",
 		"internal/domain/codes",
-		"internal/service",
+		"internal/usecase",
 		"internal/config",
 		"migrations",
 		"docs",
@@ -30,7 +30,7 @@ func CreateProjectStructure(cfg *config.Config, root string) {
 	}
 	if cfg.EnableGRPC {
 		dirs = append(dirs,
-			"internal/service/grpc",
+			"internal/usecase/grpc",
 			"internal/handler/grpc/middleware",
 			"api/proto",
 			"api/pb",
@@ -38,7 +38,7 @@ func CreateProjectStructure(cfg *config.Config, root string) {
 	}
 	if cfg.EnableHTTP {
 		dirs = append(dirs,
-			"internal/service/http",
+			"internal/usecase/http",
 			"internal/handler/http",
 			"internal/handler/http/middleware",
 		)
