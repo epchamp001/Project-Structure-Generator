@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func IsCode(err error, code string) bool {
@@ -109,4 +112,46 @@ func (e *AppError) ToHTTPResponseBody() []byte {
 	}
 	data, _ := json.Marshal(resp)
 	return data
+}
+
+// ToHTTPResponseBody returns the JSON-encoded bytes for an HTTPErrorResponse
+func (e *AppError) ToHTTPResponseBody() []byte {
+	resp := HTTPErrorResponse{
+		Code:    e.Code,
+		Message: e.Message,
+	}
+	if len(e.Fields) > 0 {
+		resp.Fields = make(map[string]interface{}, len(e.Fields))
+		for _, f := range e.Fields {
+			resp.Fields[f.Key] = f.Value
+		}
+	}
+	data, _ := json.Marshal(resp)
+	return data
+}
+
+// ToGRPCError конвертирует ошибку в gRPC ошибку
+func ToGRPCError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	appErr, ok := err.(*AppError)
+	if !ok {
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	code := codes.Internal
+	switch appErr.Code {
+	case CodeBadRequest:
+		code = codes.InvalidArgument
+	case CodeNotFound:
+		code = codes.NotFound
+	case CodeUnauthorized:
+		code = codes.Unauthenticated
+	case CodeForbidden:
+		code = codes.PermissionDenied
+	}
+
+	return status.Error(code, appErr.Message)
 }
