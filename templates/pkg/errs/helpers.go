@@ -114,22 +114,6 @@ func (e *AppError) ToHTTPResponseBody() []byte {
 	return data
 }
 
-// ToHTTPResponseBody returns the JSON-encoded bytes for an HTTPErrorResponse
-func (e *AppError) ToHTTPResponseBody() []byte {
-	resp := HTTPErrorResponse{
-		Code:    e.Code,
-		Message: e.Message,
-	}
-	if len(e.Fields) > 0 {
-		resp.Fields = make(map[string]interface{}, len(e.Fields))
-		for _, f := range e.Fields {
-			resp.Fields[f.Key] = f.Value
-		}
-	}
-	data, _ := json.Marshal(resp)
-	return data
-}
-
 // ToGRPCError конвертирует ошибку в gRPC ошибку
 func ToGRPCError(err error) error {
 	if err == nil {
