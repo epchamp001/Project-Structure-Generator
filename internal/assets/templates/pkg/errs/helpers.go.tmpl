@@ -114,13 +114,13 @@ func (e *AppError) ToHTTPResponseBody() []byte {
 	return data
 }
 
-// ToGRPCError конвертирует ошибку в gRPC ошибку
 func ToGRPCError(err error) error {
 	if err == nil {
 		return nil
 	}
 
-	appErr, ok := err.(*AppError)
+	var appErr *AppError
+	ok := errors.As(err, &appErr)
 	if !ok {
 		return status.Error(codes.Internal, err.Error())
 	}
