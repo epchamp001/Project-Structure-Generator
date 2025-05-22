@@ -6,9 +6,10 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"project-generator/internal/assets"
-	"project-generator/internal/config"
-	"project-generator/internal/service"
+
+	"github.com/epchamp001/Project-Structure-Generator/internal/assets"
+	"github.com/epchamp001/Project-Structure-Generator/internal/config"
+	"github.com/epchamp001/Project-Structure-Generator/internal/service"
 )
 
 func main() {

@@ -3,7 +3,8 @@ package service
 import (
 	"os"
 	"path/filepath"
-	"project-generator/internal/config"
+
+	"github.com/epchamp001/Project-Structure-Generator/internal/config"
 )
 
 func CreateProjectStructure(cfg *config.Config, root string) {

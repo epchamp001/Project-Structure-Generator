@@ -5,9 +5,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"project-generator/internal/config"
 	"strings"
 	"text/template"
+
+	"github.com/epchamp001/Project-Structure-Generator/internal/config"
 )
 
 func CopyTemplates(srcFS fs.FS, targetRoot string, cfg *config.Config) error {

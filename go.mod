@@ -1,4 +1,4 @@
-module project-generator
+module github.com/epchamp001/Project-Structure-Generator
 
 go 1.24.1
 
