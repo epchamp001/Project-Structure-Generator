@@ -1,0 +1,23 @@
+package config
+
+import "fmt"
+
+type GRPCServerConfig struct {
+	Enable          bool   `mapstructure:"enable"`
+	Endpoint        string `mapstructure:"endpoint"`
+	Port            int    `mapstructure:"port"`
+	ShutdownTimeout int    `mapstructure:"shutdown_timeout"`
+}
+
+type GatewayConfig struct {
+	Port     int    `mapstructure:"port"`
+	Endpoint string `mapstructure:"endpoint"`
+}
+
+func (c *GatewayConfig) Address() string {
+	return fmt.Sprintf("%s:%d", c.Endpoint, c.Port)
+}
+
+func (c *GRPCServerConfig) Address() string {
+	return fmt.Sprintf("%s:%d", c.Endpoint, c.Port)
+}

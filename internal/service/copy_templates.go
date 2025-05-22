@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"project-generator/internal/config"
@@ -9,53 +10,71 @@ import (
 	"text/template"
 )
 
-func CopyTemplates(srcDir, targetRoot string, cfg *config.Config) {
-	_ = filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+func CopyTemplates(srcFS fs.FS, targetRoot string, cfg *config.Config) error {
+	// «вырезаем» поддиректорию templates, чтобы WALKDIR шёл оттуда
+	tplFS, err := fs.Sub(srcFS, "templates")
+	if err != nil {
+		return err
+	}
+
+	return fs.WalkDir(tplFS, ".", func(relPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || !strings.HasSuffix(path, ".tmpl") {
+		// пропускаем директории
+		if d.IsDir() {
+			return nil
+		}
+		// работаем только с файлами *.tmpl
+		if !strings.HasSuffix(relPath, ".tmpl") {
 			return nil
 		}
 
-		rel, err := filepath.Rel(srcDir, path)
-		if err != nil {
-			return err
-		}
-
+		// флаги включения/отключения шаблонов
 		switch {
-		case strings.Contains(path, "internal/handler/grpc") && !cfg.EnableGRPC:
+		case strings.HasPrefix(relPath, "internal/handler/grpc") && !cfg.EnableGRPC:
 			return nil
-		case strings.Contains(path, "internal/handler/http") && !cfg.EnableHTTP:
+		case strings.HasPrefix(relPath, "internal/handler/http") && !cfg.EnableHTTP:
 			return nil
-		case strings.Contains(path, "grafana") && !cfg.EnableGrafana:
+		case strings.HasPrefix(relPath, "grafana") && !cfg.EnableGrafana:
 			return nil
-		case strings.Contains(path, "prometheus") && !cfg.EnableMetrics:
+		case strings.HasPrefix(relPath, "prometheus") && !cfg.EnableMetrics:
 			return nil
-		case strings.Contains(path, "scripts/k6") && !cfg.EnableLoad:
+		case strings.HasPrefix(relPath, "scripts/k6") && !cfg.EnableLoad:
 			return nil
 		}
 
+		// определяем куда писать
 		var dstPath string
-		if rel == "main.go.tmpl" {
+		if relPath == "main.go.tmpl" {
 			dstPath = filepath.Join(targetRoot, "cmd", cfg.CmdName, "main.go")
 		} else {
-			dstPath = filepath.Join(targetRoot, strings.TrimSuffix(rel, ".tmpl"))
+			// убираем суффикс .tmpl
+			cleanRel := strings.TrimSuffix(relPath, ".tmpl")
+			dstPath = filepath.Join(targetRoot, cleanRel)
 		}
 
-		_ = os.MkdirAll(filepath.Dir(dstPath), 0755)
-
-		tmpl, err := template.ParseFiles(path)
-		if err != nil {
+		// создаём директорию, если нужно
+		if err := os.MkdirAll(filepath.Dir(dstPath), 0o755); err != nil {
 			return err
 		}
 
+		// считываем шаблон из fs
+		data, err := fs.ReadFile(tplFS, relPath)
+		if err != nil {
+			return err
+		}
+		// парсим и выполняем шаблон
+		tmpl, err := template.New(relPath).Parse(string(data))
+		if err != nil {
+			return err
+		}
 		var buf bytes.Buffer
-		err = tmpl.Execute(&buf, cfg)
-		if err != nil {
+		if err := tmpl.Execute(&buf, cfg); err != nil {
 			return err
 		}
 
-		return os.WriteFile(dstPath, buf.Bytes(), 0644)
+		// пишем файл
+		return os.WriteFile(dstPath, buf.Bytes(), 0o644)
 	})
 }

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"project-generator/internal/assets"
 	"project-generator/internal/config"
 	"project-generator/internal/service"
 )
@@ -16,7 +18,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "projgen",
 		Short: "Project structure generator",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			changedH := cmd.Flags().Changed("http")
 			changedG := cmd.Flags().Changed("grpc")
 			if !changedH && !changedG {
@@ -44,9 +46,12 @@ func main() {
 			projectRoot := filepath.Join(targetDir, cfg.ProjectName)
 			service.CreateProjectStructure(&cfg, projectRoot)
 			service.InitGoMod(cfg.ProjectName, projectRoot)
-			service.CopyStaticDir("templates/pkg", filepath.Join(projectRoot, "pkg"))
-			service.CopyTemplates("templates", projectRoot, &cfg)
+			if err := service.CopyTemplates(assets.TemplatesFS, projectRoot, &cfg); err != nil {
+				return fmt.Errorf("copy templates: %w", err)
+			}
+
 			slog.Info("✅ Project generated successfully!")
+			return nil
 		},
 	}
 
