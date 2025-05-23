@@ -14,7 +14,7 @@
 Соберите и установите бинарник в `$GOPATH/bin` (или в директорию из `$GOBIN`):
 
 ```bash
-go install github.com/epchamp001/Project-Structure-Generator/cmd/gen@v0.1.0
+go install github.com/epchamp001/Project-Structure-Generator/cmd/gen@latest
 ```
 
 > Убедитесь, что $(go env GOPATH)/bin (или ваш GOBIN) добавлен в переменную среды PATH.
